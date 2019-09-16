@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const mongoose = require('mongoose');
+
+const { Schema } = mongoose;
 const pokemonSchema = new Schema(
   // 1st argument -> SCHEMA STRUCTURE
   {
@@ -8,12 +9,12 @@ const pokemonSchema = new Schema(
     front_default: { type: String },
     back_default: { type: String },
     front_shiny: { type: String },
-    back_shiny: { type: String }
+    back_shiny: { type: String },
   },
   {
     // automatically add "createdAt" and "updateAt" Date fields
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
-const PokeModel = mongoose.model("Poke", pokemonSchema);
+const PokeModel = mongoose.model('Poke', pokemonSchema);
 module.exports = PokeModel;
