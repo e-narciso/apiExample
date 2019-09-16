@@ -1,27 +1,66 @@
-const express = require('express');
-const router  = express.Router();
-const axios = require('axios');
+const express = require("express");
+const router = express.Router();
+const axios = require("axios");
+const Pokemon = require("../models/pokemon");
 
+/* GET home page */
+router.get("/", (req, res, next) => {
+  axios
+    .get("https://pokeapi.co/api/v2/pokemon/?offset=0&limit=807")
+    .then(allPokes => {
+      console.log("all the pokes", allPokes.data.results);
+      res.render("apiVIews/apiHome", { allthePokemon: allPokes.data.results });
+    })
+    .catch(err => next(err));
+});
 
-router.get('/poke/:pokeId', (req, res, next) => {
-  //                |
-  //                ------------------------------------------
-  //                                                          |
-  axios.get(`https://pokeapi.co/api/v2/pokemon/${req.params.pokeId}`)
-  .then(responseFromAPI => {
-    console.log("><>><<<><><><><><> ", responseFromAPI.data);
+router.get("/poke/:pokeId", (req, res, next) => {
+  Pokemon.findOne({ pokeId: Number(req.params.pokeId) + 1 })
+    .then(pokeFromDb => {
+      // console.log("the poke from db ==", pokeFromDb);
+      data = {
+        pokes: pokeFromDb,
+        isSaur: true
+      };
 
-    data = {
-      pokes: responseFromAPI.data,
-      loadedInfo: true
-    };
+      if (!responseFromAPI.data.name.includes("saur")) {
+        data.isSaur = false;
+        res.render("apiViews/apiDetails", data);
+      } else {
+        axios
+          .get(
+            `https://pokeapi.co/api/v2/pokemon/${Number(req.params.pokeId) + 1}`
+          )
+          .then(responseFromAPI => {
+            console.log("><>><<<><><><><><> ", responseFromAPI.data);
 
-    if(!responseFromAPI.data.name.includes('saur')) {
-      data.loadedInfo = false;
-    }
+            Pokemon.create({
+              pokeId: responseFromAPI.data.id,
+              name: responseFromAPI.name,
+              front_default: responseFromAPI.data.sprite.front_default,
+              back_default: responseFromAPI.data.sprites.back_default,
+              front_shiny: responseFromAPI.data.sprites.front_shiny,
+              back_shiny: responseFromAPI.data.sprites.back_shiny
+            })
+              .then(newPokeInDb => {
+                console.log("--------------", newPokeInDb)
+                data = {
+                  pokes: newPokeInDb,
+                  isSaur: true
+                };
 
-    res.render('apiViews/apiHome', data);
-  }).catch(err => next(err));
+                if (!newPokeInDb.name.includes("saur")) {
+                  data.isSaur = false;
+                }
+
+                res.render("apiViews/apiDetails", data);
+              })
+              .catch(err => next(err));
+          })
+          .catch(err => next(err));
+      }
+    })
+    .catch(err => next(err));
 });
 
 module.exports = router;
